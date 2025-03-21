@@ -1,0 +1,114 @@
+# depslib dependency file v1.0
+1742520906 source:f:\outer_space\main.cpp
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_mixer.h>
+	<SDL_ttf.h>
+	<iostream>
+	<vector>
+	<cstdlib>
+	<ctime>
+	<cmath>
+	<algorithm>
+	<fstream>
+
+1742511752 source:f:\outer_space\health.cpp
+	"health.h"
+	"constants.h"
+
+1742511589 f:\outer_space\health.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<vector>
+
+1742511589 f:\outer_space\structs.h
+	<SDL.h>
+
+1742511779 f:\outer_space\constants.h
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_mixer.h>
+	<SDL_ttf.h>
+	<iostream>
+	<vector>
+	<cstdlib>
+	<ctime>
+	<cmath>
+	<algorithm>
+	<fstream>
+
+1742512140 f:\outer_space\ship.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<SDL_mixer.h>
+	<vector>
+
+1742511589 f:\outer_space\enemy.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<vector>
+
+1742511589 f:\outer_space\planet.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<SDL_ttf.h>
+	<vector>
+
+1742511589 f:\outer_space\bullet.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<vector>
+
+1742511589 f:\outer_space\game.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<SDL_ttf.h>
+
+1742511589 f:\outer_space\input.h
+	"structs.h"
+	"constants.h"
+	<SDL.h>
+	<SDL_mixer.h>
+	<vector>
+
+1742511589 source:f:\outer_space\bullet.cpp
+	"bullet.h"
+	<algorithm>
+
+1742511589 source:f:\outer_space\enemy.cpp
+	"enemy.h"
+	<algorithm>
+
+1742511589 source:f:\outer_space\game.cpp
+	"game.h"
+	<fstream>
+	<string>
+	<iostream>
+
+1742513677 source:f:\outer_space\input.cpp
+	"input.h"
+	"planet.h"
+	"enemy.h"
+	<algorithm>
+	<iostream>
+
+1742512865 source:f:\outer_space\planet.cpp
+	"planet.h"
+	<algorithm>
+	<cmath>
+	<cstdlib>
+
+1742513490 source:f:\outer_space\ship.cpp
+	"ship.h"
+	<algorithm>
+	<iostream>
+
+1742511589 source:f:\outer_space\structs.cpp
+	"structs.h"
+
