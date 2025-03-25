@@ -8,7 +8,7 @@
 #include <ctime>
 #include <cmath>
 #include <algorithm>
-#include <fstream> // Thêm để đọc/ghi file
+#include <fstream>
 using namespace std;
 
 const int WINDOW_WIDTH = 1000;
@@ -22,13 +22,13 @@ const int PLANET_HEIGHT = 128;
 const int EGG_SIZE = 64;
 const int BULLET_SIZE = 64;
 const int SPEED = 5;
-const int SCORE_TO_UPGRADE = 20;
-const int SCORE_TO_MASTER = 40;
 const int HEART_SIZE = 32;
 const int HEART_SPRITE_SIZE = 16;
 const int HEART_FRAMES = 5;
 const int HEALTH_SIZE = 32;
 const int MAX_LIVES = 3;
+const int COIN_SIZE = 20;
+const int COIN_FRAMES = 9;
 
 const int VOLUME_BAR_X = 300;
 const int VOLUME_BAR_Y = 200;
@@ -48,8 +48,7 @@ struct SmallShip {
     int dx, dy;
     SDL_Texture* texture;
     bool active;
-    bool upgraded;
-    bool master;
+    int eggCount; // Number of eggs this ship fires
 };
 
 struct Egg {
@@ -113,6 +112,16 @@ struct Health {
         : x(x_), y(y_), active(active_) {}
 };
 
+struct Coin {
+    int x, y;
+    bool active;
+    int currentFrame;
+    Uint32 lastFrameTime;
+
+    Coin(int x_, int y_)
+        : x(x_), y(y_), active(true), currentFrame(0), lastFrameTime(0) {}
+};
+
 void spawnPlanets(vector<Planet>& planets, int count, SDL_Texture* planet1SpriteSheetTexture, SDL_Texture* planet2SpriteSheetTexture, SDL_Texture* planet3SpriteSheetTexture) {
     for (int i = 0; i < count; ++i) {
         int planetX = rand() % (WINDOW_WIDTH - PLANET_WIDTH);
@@ -128,7 +137,6 @@ void spawnPlanets(vector<Planet>& planets, int count, SDL_Texture* planet1Sprite
     }
 }
 
-// Hàm đọc high score từ file
 int loadHighScore() {
     ifstream file("highscore.txt");
     int highScore = 0;
@@ -139,7 +147,6 @@ int loadHighScore() {
     return highScore;
 }
 
-// Hàm ghi high score vào file
 void saveHighScore(int highScore) {
     ofstream file("highscore.txt");
     if (file.is_open()) {
@@ -147,6 +154,26 @@ void saveHighScore(int highScore) {
         file.close();
     } else {
         cout << "Unable to open highscore.txt for writing!" << endl;
+    }
+}
+
+int loadCoinCount() {
+    ifstream file("coin_count.txt");
+    int coinCount = 0;
+    if (file.is_open()) {
+        file >> coinCount;
+        file.close();
+    }
+    return coinCount;
+}
+
+void saveCoinCount(int coinCount) {
+    ofstream file("coin_count.txt");
+    if (file.is_open()) {
+        file << coinCount;
+        file.close();
+    } else {
+        cout << "Unable to open coin_count.txt for writing!" << endl;
     }
 }
 
@@ -226,6 +253,16 @@ int main(int argc, char* argv[]) {
     SDL_Texture* masterShipTexture = SDL_CreateTextureFromSurface(renderer, masterShipSurface);
     SDL_FreeSurface(masterShipSurface);
 
+    SDL_Surface* bigShipSurface = IMG_Load("img/ship/big_ship.png");
+    if (!bigShipSurface) cout << "Failed to load big_ship.png: " << IMG_GetError() << endl;
+    SDL_Texture* bigShipTexture = SDL_CreateTextureFromSurface(renderer, bigShipSurface);
+    SDL_FreeSurface(bigShipSurface);
+
+    SDL_Surface* manaShipSurface = IMG_Load("img/ship/mana_ship.png");
+    if (!manaShipSurface) cout << "Failed to load mana_ship.png: " << IMG_GetError() << endl;
+    SDL_Texture* manaShipTexture = SDL_CreateTextureFromSurface(renderer, manaShipSurface);
+    SDL_FreeSurface(manaShipSurface);
+
     SDL_Surface* enemySurface = IMG_Load("img/ship/small_enemy.png");
     if (!enemySurface) cout << "Failed to load small_enemy.png: " << IMG_GetError() << endl;
     SDL_Texture* enemyTexture = SDL_CreateTextureFromSurface(renderer, enemySurface);
@@ -276,6 +313,16 @@ int main(int argc, char* argv[]) {
     SDL_Texture* settingTexture = SDL_CreateTextureFromSurface(renderer, settingSurface);
     SDL_FreeSurface(settingSurface);
 
+    SDL_Surface* storeIconSurface = IMG_Load("img/object/storeicon.png");
+    if (!storeIconSurface) cout << "Failed to load storeicon.png: " << IMG_GetError() << endl;
+    SDL_Texture* storeIconTexture = SDL_CreateTextureFromSurface(renderer, storeIconSurface);
+    SDL_FreeSurface(storeIconSurface);
+
+    SDL_Surface* storeSurface = IMG_Load("img/bg/store.png");
+    if (!storeSurface) cout << "Failed to load store.png: " << IMG_GetError() << endl;
+    SDL_Texture* storeTexture = SDL_CreateTextureFromSurface(renderer, storeSurface);
+    SDL_FreeSurface(storeSurface);
+
     SDL_Surface* planet1SpriteSheetSurface = IMG_Load("img/object/planet1_spritesheet.png");
     if (!planet1SpriteSheetSurface) cout << "Failed to load planet1_spritesheet.png: " << IMG_GetError() << endl;
     SDL_Texture* planet1SpriteSheetTexture = SDL_CreateTextureFromSurface(renderer, planet1SpriteSheetSurface);
@@ -291,12 +338,30 @@ int main(int argc, char* argv[]) {
     SDL_Texture* planet3SpriteSheetTexture = SDL_CreateTextureFromSurface(renderer, planet3SpriteSheetSurface);
     SDL_FreeSurface(planet3SpriteSheetSurface);
 
+    SDL_Surface* coinSpriteSheetSurface = IMG_Load("img/object/coin.png");
+    if (!coinSpriteSheetSurface) cout << "Failed to load coin.png: " << IMG_GetError() << endl;
+    SDL_Texture* coinSpriteSheetTexture = SDL_CreateTextureFromSurface(renderer, coinSpriteSheetSurface);
+    SDL_FreeSurface(coinSpriteSheetSurface);
+
+    SDL_Surface* chosenSurface = IMG_Load("img/object/chosen.png");
+    if (!chosenSurface) cout << "Failed to load chosen.png: " << IMG_GetError() << endl;
+    SDL_Texture* chosenTexture = SDL_CreateTextureFromSurface(renderer, chosenSurface);
+    SDL_FreeSurface(chosenSurface);
+
+    SDL_Surface* soldSurface = IMG_Load("img/object/sold.png");
+    if (!soldSurface) cout << "Failed to load sold.png: " << IMG_GetError() << endl;
+    SDL_Texture* soldTexture = SDL_CreateTextureFromSurface(renderer, soldSurface);
+    SDL_FreeSurface(soldSurface);
+
     Mix_Chunk* bg_audio = Mix_LoadWAV("sound/bg_audio.wav");
     Mix_Chunk* mouse_click = Mix_LoadWAV("sound/mouse_click.wav");
     Mix_Chunk* lose_sound = Mix_LoadWAV("sound/lose_sound.wav");
     Mix_Chunk* shoot_sound = Mix_LoadWAV("sound/shoot_sound.wav");
     Mix_Chunk* health_sound = Mix_LoadWAV("sound/health_sound.wav");
-    if (!health_sound) cout << "Failed to load health_sound.wav: " << Mix_GetError() << endl;
+    Mix_Chunk* coin_sound = Mix_LoadWAV("sound/coin_sound.wav");
+    if (!coin_sound) cout << "Failed to load coin_sound.wav: " << Mix_GetError() << endl;
+    Mix_Chunk* loseheart_sound = Mix_LoadWAV("sound/loseheart_sound.wav");
+    if (!loseheart_sound) cout << "Failed to load loseheart_sound.wav: " << Mix_GetError() << endl;
 
     Mix_PlayChannel(-1, bg_audio, -1);
 
@@ -308,20 +373,26 @@ int main(int argc, char* argv[]) {
     bool gameOver = false;
     bool isPaused = false;
     bool inSettings = false;
+    bool inStore = false;
     bool isDraggingStar = false;
     bool loseSoundPlayed = false;
+    bool invincible = false; // Thêm trạng thái miễn nhiễm
+    Uint32 invincibleTime = 0; // Thời gian bắt đầu miễn nhiễm
+    const Uint32 INVINCIBLE_DURATION = 1000; // 1 giây miễn nhiễm
     GameLevel selectedLevel = NONE;
     SDL_Event event;
-    SmallShip ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, false, false};
+    SmallShip ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, 1};
     vector<Egg> eggs;
     vector<SmallEnemy> enemies;
     vector<Bullet> bullets;
     vector<Planet> planets;
     vector<Health> healthItems;
+    vector<Coin> coins;
     int enemyCount = 3;
     int enemiesSpawned = 0;
     int score = 0;
-    int highScore = loadHighScore(); // Đọc high score từ file khi khởi động
+    int coinCount = loadCoinCount();
+    int highScore = loadHighScore();
     int lastPlanetScore = 0;
     int enemySpeed = SPEED;
     Uint32 enemyShootInterval = 2000;
@@ -334,7 +405,13 @@ int main(int argc, char* argv[]) {
     int starX = VOLUME_BAR_X + VOLUME_BAR_WIDTH / 2 - STAR_SIZE / 2;
     int starY = VOLUME_BAR_Y - STAR_SIZE / 2;
 
-    TTF_Font* font = TTF_OpenFont("font/pixel_font.ttf", 36);
+    TTF_Font* font = TTF_OpenFont("font/pixel_font.ttf", 24);
+    TTF_Font* smallFont = TTF_OpenFont("font/pixel_font.ttf", 18);
+
+    int selectedShip = 0;
+    bool shipsPurchased[5] = {true, false, false, false, false};
+    int shipPrices[5] = {0, 10, 20, 30, 40};
+    int shipEggCounts[5] = {1, 2, 3, 4, 5};
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -347,11 +424,21 @@ int main(int argc, char* argv[]) {
 
                 int settingButtonX = WINDOW_WIDTH - 60;
                 int settingButtonY = WINDOW_HEIGHT - 60;
-                int settingButtonWidth = 50;
-                int settingButtonHeight = 50;
+                int settingButtonWidth = 30;
+                int settingButtonHeight = 30;
                 if (mouseX >= settingButtonX && mouseX <= settingButtonX + settingButtonWidth &&
                     mouseY >= settingButtonY && mouseY <= settingButtonY + settingButtonHeight) {
                     inSettings = !inSettings;
+                    Mix_PlayChannel(-1, mouse_click, 0);
+                }
+
+                int storeButtonX = WINDOW_WIDTH - 100;
+                int storeButtonY = WINDOW_HEIGHT - 60;
+                int storeButtonWidth = 30;
+                int storeButtonHeight = 30;
+                if (mouseX >= storeButtonX && mouseX <= storeButtonX + storeButtonWidth &&
+                    mouseY >= storeButtonY && mouseY <= storeButtonY + storeButtonHeight) {
+                    inStore = !inStore;
                     Mix_PlayChannel(-1, mouse_click, 0);
                 }
 
@@ -371,14 +458,17 @@ int main(int argc, char* argv[]) {
                         gameOver = false;
                         isPaused = false;
                         inSettings = false;
+                        inStore = false;
                         loseSoundPlayed = false;
+                        invincible = false; // Reset miễn nhiễm
                         selectedLevel = NONE;
-                        ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, false, false};
+                        ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, 1};
                         eggs.clear();
                         bullets.clear();
                         planets.clear();
                         enemies.clear();
                         healthItems.clear();
+                        coins.clear();
                         enemyCount = 3;
                         enemiesSpawned = 0;
                         score = 0;
@@ -401,30 +491,53 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
-                if (!inSettings) {
+                if (inStore) {
+                    int shipX = 360;
+                    int shipYStart = 160;
+                    int rowHeight = 80;
+                    for (int i = 0; i < 5; i++) {
+                        if (mouseX >= shipX && mouseX <= shipX + SHIP_WIDTH &&
+                            mouseY >= shipYStart + i * rowHeight && mouseY <= shipYStart + i * rowHeight + SHIP_HEIGHT) {
+                            if (shipsPurchased[i]) {
+                                selectedShip = i;
+                                SDL_Texture* ships[] = {smallShipTexture, commonShipTexture, masterShipTexture, bigShipTexture, manaShipTexture};
+                                ship.texture = ships[selectedShip];
+                                ship.eggCount = shipEggCounts[selectedShip];
+                                Mix_PlayChannel(-1, mouse_click, 0);
+                            } else if (coinCount >= shipPrices[i]) {
+                                coinCount -= shipPrices[i];
+                                shipsPurchased[i] = true;
+                                selectedShip = i;
+                                SDL_Texture* ships[] = {smallShipTexture, commonShipTexture, masterShipTexture, bigShipTexture, manaShipTexture};
+                                ship.texture = ships[selectedShip];
+                                ship.eggCount = shipEggCounts[selectedShip];
+                                saveCoinCount(coinCount);
+                                Mix_PlayChannel(-1, mouse_click, 0);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (!inSettings && !inStore) {
                     if (inMenu) {
-                        if (mouseX >= WINDOW_WIDTH / 2 - 75 && mouseX <= WINDOW_WIDTH / 2 + 75 && mouseY >= 300 && mouseY <= 350) {
+                        if (mouseX >= 410 && mouseX <= 575 && mouseY >= 345 && mouseY <= 385) {
                             inMenu = false;
                             inLevelSelect = true;
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
-                        else if (mouseX >= WINDOW_WIDTH / 2 - 75 && mouseX <= WINDOW_WIDTH / 2 + 75 && mouseY >= 360 && mouseY <= 410) {
-                            inMenu = false;
-                            inLevelSelect = true;
-                            Mix_PlayChannel(-1, mouse_click, 0);
-                        }
-                        else if (mouseX >= WINDOW_WIDTH / 2 - 75 && mouseX <= WINDOW_WIDTH / 2 + 75 && mouseY >= 420 && mouseY <= 470) {
+                        else if (mouseX >= 410 && mouseX <= 575 && mouseY >= 405 && mouseY <= 445) {
                             inMenu = false;
                             helpScreen = true;
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
-                        else if (mouseX >= WINDOW_WIDTH / 2 - 75 && mouseX <= WINDOW_WIDTH / 2 + 75 && mouseY >= 480 && mouseY <= 530) {
+                        else if (mouseX >= 410 && mouseX <= 575 && mouseY >= 465 && mouseY <= 505) {
                             running = false;
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
                     }
                     else if (inLevelSelect) {
-                        if (mouseX >= 100 && mouseX <= 300 && mouseY >= 300 && mouseY <= 500) {
+                        if (mouseX >= 130 && mouseX <= 360 && mouseY >= 270 && mouseY <= 385) {
                             selectedLevel = NOVICE;
                             enemySpeed = SPEED / 2;
                             enemyShootInterval = 0;
@@ -433,6 +546,7 @@ int main(int argc, char* argv[]) {
                             enemies.clear();
                             planets.clear();
                             healthItems.clear();
+                            coins.clear();
                             enemiesSpawned = 0;
                             for (int i = 0; i < enemyCount; ++i) {
                                 bool canShoot = false;
@@ -442,7 +556,7 @@ int main(int argc, char* argv[]) {
                             }
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
-                        else if (mouseX >= 450 && mouseX <= 550 && mouseY >= 200 && mouseY <= 400) {
+                        else if (mouseX >= 385 && mouseX <= 615 && mouseY >= 270 && mouseY <= 385) {
                             selectedLevel = WARRIOR;
                             enemySpeed = SPEED;
                             enemyShootInterval = 2000;
@@ -451,12 +565,13 @@ int main(int argc, char* argv[]) {
                             enemies.clear();
                             planets.clear();
                             healthItems.clear();
+                            coins.clear();
                             enemiesSpawned = 0;
                             planetWave = 1;
                             spawnPlanets(planets, planetWave, planet1SpriteSheetTexture, planet2SpriteSheetTexture, planet3SpriteSheetTexture);
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
-                        else if (mouseX >= 700 && mouseX <= 900 && mouseY >= 100 && mouseY <= 350) {
+                        else if (mouseX >= 640 && mouseX <= 870 && mouseY >= 270 && mouseY <= 385) {
                             selectedLevel = LEGEND;
                             enemySpeed = SPEED / 2;
                             enemyShootInterval = 3000;
@@ -465,6 +580,7 @@ int main(int argc, char* argv[]) {
                             enemies.clear();
                             planets.clear();
                             healthItems.clear();
+                            coins.clear();
                             enemiesSpawned = 0;
                             enemyCount = 3;
                             for (int i = 0; i < enemyCount; ++i) {
@@ -488,15 +604,17 @@ int main(int argc, char* argv[]) {
                         }
                     }
                     else if (gameOver) {
-                        if (mouseX >= 400 && mouseX <= 600 && mouseY >= 200 && mouseY <= 250) {
+                        if (mouseX >= 340 && mouseX <= 625 && mouseY >= 260 && mouseY <= 300) {
                             gameOver = false;
                             lives = 3;
-                            ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, false, false};
+                            invincible = false; // Reset miễn nhiễm khi chơi lại
+                            ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, ship.texture, true, ship.eggCount};
                             eggs.clear();
                             enemies.clear();
                             bullets.clear();
                             planets.clear();
                             healthItems.clear();
+                            coins.clear();
                             enemyCount = 3;
                             enemiesSpawned = 0;
                             score = 0;
@@ -525,18 +643,20 @@ int main(int argc, char* argv[]) {
                             }
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
-                        else if (mouseX >= 400 && mouseX <= 600 && mouseY >= 300 && mouseY <= 350) {
+                        else if (mouseX >= 340 && mouseX <= 625 && mouseY >= 330 && mouseY <= 370) {
                             inMenu = false;
                             inLevelSelect = true;
                             gameRunning = false;
                             gameOver = false;
                             lives = 3;
-                            ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, false, false};
+                            invincible = false; // Reset miễn nhiễm
+                            ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, 1};
                             eggs.clear();
                             bullets.clear();
                             planets.clear();
                             enemies.clear();
                             healthItems.clear();
+                            coins.clear();
                             enemyCount = 3;
                             enemiesSpawned = 0;
                             score = 0;
@@ -545,7 +665,7 @@ int main(int argc, char* argv[]) {
                             planetWave = 1;
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
-                        else if (mouseX >= 400 && mouseX <= 600 && mouseY >= 400 && mouseY <= 450) {
+                        else if (mouseX >= 340 && mouseX <= 625 && mouseY >= 400 && mouseY <= 440) {
                             running = false;
                             Mix_PlayChannel(-1, mouse_click, 0);
                         }
@@ -569,30 +689,48 @@ int main(int argc, char* argv[]) {
                 Mix_VolumeChunk(lose_sound, volume);
                 Mix_VolumeChunk(shoot_sound, volume);
                 Mix_VolumeChunk(health_sound, volume);
+                Mix_VolumeChunk(coin_sound, volume);
+                Mix_VolumeChunk(loseheart_sound, volume);
             }
-            else if (event.type == SDL_KEYDOWN && gameRunning && !gameOver && !isPaused && !inSettings) {
+            else if (event.type == SDL_KEYDOWN && gameRunning && !gameOver && !isPaused && !inSettings && !inStore) {
                 switch (event.key.keysym.sym) {
                     case SDLK_LEFT: ship.dx = -SPEED; break;
                     case SDLK_RIGHT: ship.dx = SPEED; break;
                     case SDLK_UP: ship.dy = -SPEED; break;
                     case SDLK_DOWN: ship.dy = SPEED; break;
                     case SDLK_SPACE:
-                        if (!ship.upgraded && !ship.master) {
-                            eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, 0, -5, true));
-                        } else if (ship.upgraded && !ship.master) {
-                            eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, 0, -5, true));
-                            eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, -3, -3, true));
-                            eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, 3, -3, true));
-                        } else if (ship.master) {
-                            for (int i = -2; i <= 2; ++i) {
-                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, i * 2, -5 + abs(i), true));
-                            }
+                        switch (ship.eggCount) {
+                            case 1: // small_ship
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, 0, -5, true));
+                                break;
+                            case 2: // common_ship
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 - 10, ship.y, 0, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 + 10, ship.y, 0, -5, true));
+                                break;
+                            case 3: // super_ship
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, 0, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 - 20, ship.y, -1, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 + 20, ship.y, 1, -5, true));
+                                break;
+                            case 4: // big_ship
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 - 30, ship.y, -1, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 - 10, ship.y, 0, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 + 10, ship.y, 0, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 + 30, ship.y, 1, -5, true));
+                                break;
+                            case 5: // mana_ship
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2, ship.y, 0, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 - 40, ship.y, -2, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 - 20, ship.y, -1, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 + 20, ship.y, 1, -5, true));
+                                eggs.push_back(Egg(ship.x + SHIP_WIDTH / 2 - EGG_SIZE / 2 + 40, ship.y, 2, -5, true));
+                                break;
                         }
                         Mix_PlayChannel(-1, shoot_sound, 0);
                         break;
                 }
             }
-            else if (event.type == SDL_KEYUP && gameRunning && !gameOver && !isPaused && !inSettings) {
+            else if (event.type == SDL_KEYUP && gameRunning && !gameOver && !isPaused && !inSettings && !inStore) {
                 switch (event.key.keysym.sym) {
                     case SDLK_LEFT:
                     case SDLK_RIGHT: ship.dx = 0; break;
@@ -612,52 +750,6 @@ int main(int argc, char* argv[]) {
                     inMenu = true;
                 }
             }
-            else if (event.type == SDL_KEYDOWN && gameOver) {
-                if (event.key.keysym.sym == SDLK_h) {
-                    gameOver = false;
-                    lives = 3;
-                    ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, false, false};
-                    eggs.clear();
-                    enemies.clear();
-                    bullets.clear();
-                    planets.clear();
-                    healthItems.clear();
-                    enemyCount = 3;
-                    enemiesSpawned = 0;
-                    score = 0;
-                    lastPlanetScore = 0;
-                    loseSoundPlayed = false;
-                    planetWave = 1;
-                    if (selectedLevel == NOVICE) {
-                        for (int i = 0; i < enemyCount; ++i) {
-                            bool canShoot = false;
-                            enemies.push_back({rand() % (WINDOW_WIDTH - ENEMY_WIDTH), rand() % (WINDOW_HEIGHT / 2),
-                                              (rand() % 3 - 1) * enemySpeed, (rand() % 3 - 1) * enemySpeed, enemyTexture, true, 0, canShoot});
-                            enemiesSpawned++;
-                        }
-                    }
-                    else if (selectedLevel == WARRIOR) {
-                        spawnPlanets(planets, planetWave, planet1SpriteSheetTexture, planet2SpriteSheetTexture, planet3SpriteSheetTexture);
-                    }
-                    else if (selectedLevel == LEGEND) {
-                        enemyCount = 3;
-                        for (int i = 0; i < enemyCount; ++i) {
-                            bool canShoot = true;
-                            enemies.push_back({rand() % (WINDOW_WIDTH - ENEMY_WIDTH), rand() % (WINDOW_HEIGHT / 2),
-                                              (rand() % 3 - 1) * enemySpeed, (rand() % 3 - 1) * enemySpeed, enemyTexture, true, 0, canShoot});
-                            enemiesSpawned++;
-                        }
-                    }
-                }
-                else if (event.key.keysym.sym == SDLK_RETURN) {
-                    running = false;
-                }
-            }
-            else if (event.type == SDL_KEYDOWN && inSettings) {
-                if (event.key.keysym.sym == SDLK_ESCAPE) {
-                    inSettings = false;
-                }
-            }
         }
 
         if (inMenu) {
@@ -671,7 +763,7 @@ int main(int argc, char* argv[]) {
         if (gameRunning) {
             SDL_RenderCopy(renderer, gameBgTexture, NULL, NULL);
 
-            if (!isPaused && !inSettings && !gameOver) {
+            if (!isPaused && !inSettings && !inStore && !gameOver) {
                 int newX = ship.x + ship.dx;
                 int newY = ship.y + ship.dy;
                 if (newX >= 0 && newX <= WINDOW_WIDTH - SHIP_WIDTH) ship.x = newX;
@@ -781,13 +873,11 @@ int main(int argc, char* argv[]) {
                                         planet.active = false;
                                         score += 5;
                                         destroyedPlanetPositions.push_back({planet.x, planet.y});
-                                        if (score >= SCORE_TO_UPGRADE && !ship.upgraded) {
-                                            ship.texture = commonShipTexture;
-                                            ship.upgraded = true;
-                                        }
-                                        if (score >= SCORE_TO_MASTER && ship.upgraded && !ship.master) {
-                                            ship.texture = masterShipTexture;
-                                            ship.master = true;
+                                        for (int i = 0; i < 5; ++i) {
+                                            int offsetX = (rand() % 41) - 20;
+                                            int offsetY = (rand() % 41) - 20;
+                                            coins.push_back(Coin(planet.x + PLANET_WIDTH / 2 - COIN_SIZE / 2 + offsetX,
+                                                                planet.y + PLANET_HEIGHT / 2 - COIN_SIZE / 2 + offsetY));
                                         }
                                     }
                                 }
@@ -820,14 +910,7 @@ int main(int argc, char* argv[]) {
                                 egg.active = false;
                                 enemy.active = false;
                                 score++;
-                                if (score >= SCORE_TO_UPGRADE && !ship.upgraded) {
-                                    ship.texture = commonShipTexture;
-                                    ship.upgraded = true;
-                                }
-                                if (score >= SCORE_TO_MASTER && ship.upgraded && !ship.master) {
-                                    ship.texture = masterShipTexture;
-                                    ship.master = true;
-                                }
+                                coins.push_back(Coin(enemy.x + ENEMY_WIDTH / 2 - COIN_SIZE / 2, enemy.y + ENEMY_HEIGHT / 2 - COIN_SIZE / 2));
                                 if (selectedLevel == NOVICE) {
                                     bullets.push_back(Bullet(enemy.x + ENEMY_WIDTH / 2 - BULLET_SIZE / 2, enemy.y, 0, 5, bulletTexture, true));
                                 }
@@ -837,7 +920,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 for (const auto& enemy : enemies) {
-                    if (enemy.active) {
+                    if (enemy.active && !invincible) {
                         int shipLeft = ship.x;
                         int shipRight = ship.x + SHIP_WIDTH;
                         int shipTop = ship.y;
@@ -849,18 +932,22 @@ int main(int argc, char* argv[]) {
 
                         if (shipRight > enemyLeft && shipLeft < enemyRight && shipBottom > enemyTop && shipTop < enemyBottom) {
                             lives--;
+                            Mix_PlayChannel(-1, loseheart_sound, 0);
+                            invincible = true;
+                            invincibleTime = SDL_GetTicks();
                             if (lives <= 0) {
                                 gameOver = true;
                             } else {
                                 ship.x = WINDOW_WIDTH / 2;
                                 ship.y = WINDOW_HEIGHT - SHIP_HEIGHT - 10;
                             }
+                            break; // Thoát vòng lặp sau khi mất mạng
                         }
                     }
                 }
 
                 for (const auto& bullet : bullets) {
-                    if (bullet.active) {
+                    if (bullet.active && !invincible) {
                         int shipLeft = ship.x;
                         int shipRight = ship.x + SHIP_WIDTH;
                         int shipTop = ship.y;
@@ -872,13 +959,24 @@ int main(int argc, char* argv[]) {
 
                         if (shipRight > bulletLeft && shipLeft < bulletRight && shipBottom > bulletTop && shipTop < bulletBottom) {
                             lives--;
+                            Mix_PlayChannel(-1, loseheart_sound, 0);
+                            invincible = true;
+                            invincibleTime = SDL_GetTicks();
                             if (lives <= 0) {
                                 gameOver = true;
                             } else {
                                 ship.x = WINDOW_WIDTH / 2;
                                 ship.y = WINDOW_HEIGHT - SHIP_HEIGHT - 10;
                             }
+                            break; // Thoát vòng lặp sau khi mất mạng
                         }
+                    }
+                }
+
+                if (invincible) {
+                    Uint32 currentTime = SDL_GetTicks();
+                    if (currentTime - invincibleTime >= INVINCIBLE_DURATION) {
+                        invincible = false;
                     }
                 }
 
@@ -905,10 +1003,31 @@ int main(int argc, char* argv[]) {
                 healthItems.erase(remove_if(healthItems.begin(), healthItems.end(),
                     [](const Health& h) { return !h.active; }), healthItems.end());
 
-                // Kiểm tra và cập nhật high score khi game over
+                for (auto& coin : coins) {
+                    if (coin.active) {
+                        int shipLeft = ship.x;
+                        int shipRight = ship.x + SHIP_WIDTH;
+                        int shipTop = ship.y;
+                        int shipBottom = ship.y + SHIP_HEIGHT;
+                        int coinLeft = coin.x;
+                        int coinRight = coin.x + COIN_SIZE;
+                        int coinTop = coin.y;
+                        int coinBottom = coin.y + COIN_SIZE;
+
+                        if (shipRight > coinLeft && shipLeft < coinRight && shipBottom > coinTop && shipTop < coinBottom) {
+                            coin.active = false;
+                            coinCount++;
+                            Mix_PlayChannel(-1, coin_sound, 0);
+                            saveCoinCount(coinCount);
+                        }
+                    }
+                }
+                coins.erase(remove_if(coins.begin(), coins.end(),
+                    [](const Coin& c) { return !c.active; }), coins.end());
+
                 if (gameOver && score > highScore) {
                     highScore = score;
-                    saveHighScore(highScore); // Ghi high score mới vào file
+                    saveHighScore(highScore);
                 }
             }
 
@@ -990,8 +1109,24 @@ int main(int argc, char* argv[]) {
                 }
             }
 
+            SDL_Rect coinSrcRect = {0, 0, COIN_SIZE, COIN_SIZE};
+            SDL_Rect coinDestRect = {0, 0, COIN_SIZE, COIN_SIZE};
+            for (auto& coin : coins) {
+                if (coin.active) {
+                    Uint32 currentTime = SDL_GetTicks();
+                    if (currentTime - coin.lastFrameTime >= 100) {
+                        coin.currentFrame = (coin.currentFrame + 1) % COIN_FRAMES;
+                        coin.lastFrameTime = currentTime;
+                    }
+                    coinSrcRect.x = coin.currentFrame * COIN_SIZE;
+                    coinDestRect.x = coin.x;
+                    coinDestRect.y = coin.y;
+                    SDL_RenderCopy(renderer, coinSpriteSheetTexture, &coinSrcRect, &coinDestRect);
+                }
+            }
+
             Uint32 currentTime = SDL_GetTicks();
-            if (!isPaused && !inSettings && !gameOver && currentTime - frameTime >= FRAME_DELAY) {
+            if (!isPaused && !inSettings && !inStore && !gameOver && currentTime - frameTime >= FRAME_DELAY) {
                 currentFrame = (currentFrame + 1) % HEART_FRAMES;
                 frameTime = currentTime;
             }
@@ -1005,7 +1140,6 @@ int main(int argc, char* argv[]) {
             }
 
             SDL_Color white = {255, 255, 255, 255};
-            // Hiển thị "Your Score"
             string scoreText = "Your score: " + to_string(score);
             SDL_Surface* scoreSurface = TTF_RenderText_Solid(font, scoreText.c_str(), white);
             if (scoreSurface) {
@@ -1020,19 +1154,32 @@ int main(int argc, char* argv[]) {
                 SDL_FreeSurface(scoreSurface);
             }
 
-            // Hiển thị "High Score" dưới "Your Score"
             string highScoreText = "High score: " + to_string(highScore);
             SDL_Surface* highScoreSurface = TTF_RenderText_Solid(font, highScoreText.c_str(), white);
             if (highScoreSurface) {
                 SDL_Texture* highScoreTexture = SDL_CreateTextureFromSurface(renderer, highScoreSurface);
                 if (highScoreTexture) {
                     int highScoreX = 10;
-                    int highScoreY = 45; // Đặt dưới "Your Score" (40 + khoảng cách 40)
+                    int highScoreY = 30;
                     SDL_Rect highScoreRect = {highScoreX, highScoreY, highScoreSurface->w, highScoreSurface->h};
                     SDL_RenderCopy(renderer, highScoreTexture, NULL, &highScoreRect);
                     SDL_DestroyTexture(highScoreTexture);
                 }
                 SDL_FreeSurface(highScoreSurface);
+            }
+
+            string coinText = "Coin: " + to_string(coinCount);
+            SDL_Surface* coinSurface = TTF_RenderText_Solid(font, coinText.c_str(), white);
+            if (coinSurface) {
+                SDL_Texture* coinTexture = SDL_CreateTextureFromSurface(renderer, coinSurface);
+                if (coinTexture) {
+                    int coinX = 10;
+                    int coinY = 55;
+                    SDL_Rect coinRect = {coinX, coinY, coinSurface->w, coinSurface->h};
+                    SDL_RenderCopy(renderer, coinTexture, NULL, &coinRect);
+                    SDL_DestroyTexture(coinTexture);
+                }
+                SDL_FreeSurface(coinSurface);
             }
 
             SDL_Rect buttonRect = {10, 520, 40, 40};
@@ -1057,33 +1204,91 @@ int main(int argc, char* argv[]) {
             SDL_RenderCopy(renderer, helpBgTexture, NULL, NULL);
         }
 
-        SDL_Rect settingButtonRect = {WINDOW_WIDTH - 60, WINDOW_HEIGHT - 60, 50, 50};
-        SDL_RenderCopy(renderer, settingStarTexture, NULL, &settingButtonRect);
+        if (inStore) {
+            SDL_RenderCopy(renderer, storeTexture, NULL, NULL);
+
+            SDL_Color white = {255, 255, 255, 255};
+            string prices[] = {"Free", "10 coins", "20 coins", "30 coins", "40 coins"};
+            int priceX = 105;
+            int priceYStart = 175;
+            int rowHeight = 80;
+
+            for (int i = 0; i < 5; i++) {
+                SDL_Surface* priceSurface = TTF_RenderText_Solid(smallFont, prices[i].c_str(), white);
+                if (priceSurface) {
+                    SDL_Texture* priceTexture = SDL_CreateTextureFromSurface(renderer, priceSurface);
+                    if (priceTexture) {
+                        SDL_Rect priceRect = {priceX, priceYStart + i * rowHeight, priceSurface->w, priceSurface->h};
+                        SDL_RenderCopy(renderer, priceTexture, NULL, &priceRect);
+                        SDL_DestroyTexture(priceTexture);
+                    }
+                    SDL_FreeSurface(priceSurface);
+                }
+            }
+
+            SDL_Texture* ships[] = {smallShipTexture, commonShipTexture, masterShipTexture, bigShipTexture, manaShipTexture};
+            int shipX = 360;
+            int shipYStart = 160;
+
+            for (int i = 0; i < 5; i++) {
+                SDL_Rect shipRect = {shipX, shipYStart + i * rowHeight, SHIP_WIDTH, SHIP_HEIGHT};
+                SDL_RenderCopy(renderer, ships[i], NULL, &shipRect);
+
+                if (i == selectedShip && shipsPurchased[i]) {
+                    SDL_Rect chosenRect = {shipX + SHIP_WIDTH, shipYStart + i * rowHeight, 32, 32};
+                    SDL_RenderCopy(renderer, chosenTexture, NULL, &chosenRect);
+                }
+
+                if (shipsPurchased[i]) {
+                    SDL_Rect soldRect = {shipX, shipYStart + i * rowHeight, SHIP_WIDTH, SHIP_HEIGHT};
+                    SDL_RenderCopy(renderer, soldTexture, NULL, &soldRect);
+                }
+            }
+
+            int eggX = 600;
+            int eggYStart = 160;
+            int eggCounts[] = {1, 2, 3, 4, 5};
+
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < eggCounts[i]; j++) {
+                    SDL_Rect eggRect = {eggX + j * (EGG_SIZE + 5), eggYStart + i * rowHeight, EGG_SIZE, EGG_SIZE};
+                    SDL_RenderCopy(renderer, eggTexture, NULL, &eggRect);
+                }
+            }
+        }
 
         if (inSettings) {
             SDL_RenderCopy(renderer, settingTexture, NULL, NULL);
-
             SDL_Rect starRect = {starX, starY, STAR_SIZE, STAR_SIZE};
             SDL_RenderCopy(renderer, starTexture, NULL, &starRect);
         }
+
+        SDL_Rect settingButtonRect = {WINDOW_WIDTH - 60, WINDOW_HEIGHT - 60, 50, 50};
+        SDL_RenderCopy(renderer, settingStarTexture, NULL, &settingButtonRect);
+
+        SDL_Rect storeButtonRect = {WINDOW_WIDTH - 120, WINDOW_HEIGHT - 60, 50, 50};
+        SDL_RenderCopy(renderer, storeIconTexture, NULL, &storeButtonRect);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
 
-    // Cập nhật high score trước khi thoát game nếu cần
     if (score > highScore) {
         highScore = score;
         saveHighScore(highScore);
     }
+    saveCoinCount(coinCount);
 
     Mix_FreeChunk(bg_audio);
     Mix_FreeChunk(mouse_click);
     Mix_FreeChunk(lose_sound);
     Mix_FreeChunk(shoot_sound);
     Mix_FreeChunk(health_sound);
+    Mix_FreeChunk(coin_sound);
+    Mix_FreeChunk(loseheart_sound);
     Mix_CloseAudio();
     TTF_CloseFont(font);
+    TTF_CloseFont(smallFont);
     TTF_Quit();
     SDL_DestroyTexture(menuBgTexture);
     SDL_DestroyTexture(levelBgTexture);
@@ -1093,6 +1298,8 @@ int main(int argc, char* argv[]) {
     SDL_DestroyTexture(smallShipTexture);
     SDL_DestroyTexture(commonShipTexture);
     SDL_DestroyTexture(masterShipTexture);
+    SDL_DestroyTexture(bigShipTexture);
+    SDL_DestroyTexture(manaShipTexture);
     SDL_DestroyTexture(enemyTexture);
     SDL_DestroyTexture(bulletTexture);
     SDL_DestroyTexture(eggTexture);
@@ -1103,9 +1310,14 @@ int main(int argc, char* argv[]) {
     SDL_DestroyTexture(starTexture);
     SDL_DestroyTexture(settingStarTexture);
     SDL_DestroyTexture(settingTexture);
+    SDL_DestroyTexture(storeIconTexture);
+    SDL_DestroyTexture(storeTexture);
     SDL_DestroyTexture(planet1SpriteSheetTexture);
     SDL_DestroyTexture(planet2SpriteSheetTexture);
     SDL_DestroyTexture(planet3SpriteSheetTexture);
+    SDL_DestroyTexture(coinSpriteSheetTexture);
+    SDL_DestroyTexture(chosenTexture);
+    SDL_DestroyTexture(soldTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     IMG_Quit();

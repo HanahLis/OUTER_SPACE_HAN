@@ -31,24 +31,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="bullet.cpp" />
-		<Unit filename="bullet.h" />
-		<Unit filename="constants.h" />
-		<Unit filename="enemy.cpp" />
-		<Unit filename="enemy.h" />
-		<Unit filename="game.cpp" />
-		<Unit filename="game.h" />
-		<Unit filename="health.cpp" />
-		<Unit filename="health.h" />
-		<Unit filename="input.cpp" />
-		<Unit filename="input.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="planet.cpp" />
-		<Unit filename="planet.h" />
-		<Unit filename="ship.cpp" />
-		<Unit filename="ship.h" />
-		<Unit filename="structs.cpp" />
-		<Unit filename="structs.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

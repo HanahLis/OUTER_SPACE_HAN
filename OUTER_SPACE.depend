@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1742520906 source:f:\outer_space\main.cpp
+1742873769 source:f:\outer_space\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_mixer.h>
