@@ -157,26 +157,6 @@ void saveHighScore(int highScore) {
     }
 }
 
-int loadCoinCount() {
-    ifstream file("coin_count.txt");
-    int coinCount = 0;
-    if (file.is_open()) {
-        file >> coinCount;
-        file.close();
-    }
-    return coinCount;
-}
-
-void saveCoinCount(int coinCount) {
-    ofstream file("coin_count.txt");
-    if (file.is_open()) {
-        file << coinCount;
-        file.close();
-    } else {
-        cout << "Unable to open coin_count.txt for writing!" << endl;
-    }
-}
-
 int main(int argc, char* argv[]) {
     srand(static_cast<unsigned int>(std::time(nullptr)));
 
@@ -376,9 +356,9 @@ int main(int argc, char* argv[]) {
     bool inStore = false;
     bool isDraggingStar = false;
     bool loseSoundPlayed = false;
-    bool invincible = false; // Thêm trạng thái miễn nhiễm
-    Uint32 invincibleTime = 0; // Thời gian bắt đầu miễn nhiễm
-    const Uint32 INVINCIBLE_DURATION = 1000; // 1 giây miễn nhiễm
+    bool invincible = false;
+    Uint32 invincibleTime = 0;
+    const Uint32 INVINCIBLE_DURATION = 1000;
     GameLevel selectedLevel = NONE;
     SDL_Event event;
     SmallShip ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, 1};
@@ -391,7 +371,7 @@ int main(int argc, char* argv[]) {
     int enemyCount = 3;
     int enemiesSpawned = 0;
     int score = 0;
-    int coinCount = loadCoinCount();
+    int coinCount = 0; // Khởi tạo trực tiếp, không đọc từ file
     int highScore = loadHighScore();
     int lastPlanetScore = 0;
     int enemySpeed = SPEED;
@@ -460,7 +440,7 @@ int main(int argc, char* argv[]) {
                         inSettings = false;
                         inStore = false;
                         loseSoundPlayed = false;
-                        invincible = false; // Reset miễn nhiễm
+                        invincible = false;
                         selectedLevel = NONE;
                         ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, 1};
                         eggs.clear();
@@ -511,7 +491,6 @@ int main(int argc, char* argv[]) {
                                 SDL_Texture* ships[] = {smallShipTexture, commonShipTexture, masterShipTexture, bigShipTexture, manaShipTexture};
                                 ship.texture = ships[selectedShip];
                                 ship.eggCount = shipEggCounts[selectedShip];
-                                saveCoinCount(coinCount);
                                 Mix_PlayChannel(-1, mouse_click, 0);
                             }
                             break;
@@ -607,7 +586,7 @@ int main(int argc, char* argv[]) {
                         if (mouseX >= 340 && mouseX <= 625 && mouseY >= 260 && mouseY <= 300) {
                             gameOver = false;
                             lives = 3;
-                            invincible = false; // Reset miễn nhiễm khi chơi lại
+                            invincible = false;
                             ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, ship.texture, true, ship.eggCount};
                             eggs.clear();
                             enemies.clear();
@@ -649,7 +628,7 @@ int main(int argc, char* argv[]) {
                             gameRunning = false;
                             gameOver = false;
                             lives = 3;
-                            invincible = false; // Reset miễn nhiễm
+                            invincible = false;
                             ship = {WINDOW_WIDTH / 2, WINDOW_HEIGHT - SHIP_HEIGHT - 10, 0, 0, smallShipTexture, true, 1};
                             eggs.clear();
                             bullets.clear();
@@ -941,7 +920,7 @@ int main(int argc, char* argv[]) {
                                 ship.x = WINDOW_WIDTH / 2;
                                 ship.y = WINDOW_HEIGHT - SHIP_HEIGHT - 10;
                             }
-                            break; // Thoát vòng lặp sau khi mất mạng
+                            break;
                         }
                     }
                 }
@@ -968,7 +947,7 @@ int main(int argc, char* argv[]) {
                                 ship.x = WINDOW_WIDTH / 2;
                                 ship.y = WINDOW_HEIGHT - SHIP_HEIGHT - 10;
                             }
-                            break; // Thoát vòng lặp sau khi mất mạng
+                            break;
                         }
                     }
                 }
@@ -1018,7 +997,6 @@ int main(int argc, char* argv[]) {
                             coin.active = false;
                             coinCount++;
                             Mix_PlayChannel(-1, coin_sound, 0);
-                            saveCoinCount(coinCount);
                         }
                     }
                 }
@@ -1277,7 +1255,6 @@ int main(int argc, char* argv[]) {
         highScore = score;
         saveHighScore(highScore);
     }
-    saveCoinCount(coinCount);
 
     Mix_FreeChunk(bg_audio);
     Mix_FreeChunk(mouse_click);
