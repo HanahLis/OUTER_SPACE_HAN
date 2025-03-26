@@ -16,7 +16,11 @@ Student ID: 24020115
 
 Class: K69I-IT7
 
+<<<<<<< HEAD
 Email: laladoraema@gmail.com 
+=======
+Email: laladoraema@gmail.com
+>>>>>>> c4e30c1 (final)
 
 ## Gameplay
 ### Overview
@@ -81,16 +85,16 @@ Lives will be displayed at the top-right corner of the screen. You will lose whe
 
 #### CREDITS
 **Special thanks to:**
-[Lazy Foo' Productions](https://lazyfoo.net/tutorials/SDL/01_hello_SDL/index.php) for their tutorials on SDL2.
-[SDL2](https://wiki.libsdl.org/SDL3/FrontPage) for their library.
-GitHub for powerful coding tools.
+* [Lazy Foo' Productions](https://lazyfoo.net/tutorials/SDL/01_hello_SDL/index.php) for their tutorials on SDL2.
+* [SDL2](https://wiki.libsdl.org/SDL3/FrontPage) for their library.
+* GitHub for powerful coding tools.
 
 **In this game, I used:**
-[Hack MD](https://hackmd.io/?nav=overview) for writing this document
-[Canva](https://www.canva.com) for creating images.
-Fonts for some text in my game.
-Music
-Sound effects
+* [Hack MD](https://hackmd.io/?nav=overview) for writing this document
+* [Canva](https://www.canva.com) for creating images.
+* Fonts for some text in my game.
+* Music
+* Sound effects
 
 
 
