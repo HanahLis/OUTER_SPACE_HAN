@@ -11,9 +11,12 @@ This is my own first game project using C, C++ and  SDL2 libraries at University
 # * Table of contents
 ## Personal Information
 Name: Nguyễn Thị Ngọc Hà
+
 Student ID: 24020115
+
 Class: K69I-IT7
-Email: laladoraema@gmail.com
+
+Email: laladoraema@gmail.com 
 
 ## Gameplay
 ### Overview
