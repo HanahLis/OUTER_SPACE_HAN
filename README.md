@@ -1,8 +1,3 @@
----
-title: OUTER SPACE
-
----
-
 # **OUTER SPACE**
 
 ---
@@ -44,16 +39,17 @@ Use SPACE to shoot and LEFT, RIGHT, UP, DOWN to move
 
 ### Objective
 #### SPACESHIPS
-![big_ship](https://hackmd.io/_uploads/rynm0eZTkx.png =30%x) ![common_ship](https://hackmd.io/_uploads/BJ3m0gbTyg.png =40%x) ![small_enemy](https://hackmd.io/_uploads/Skn7Rg-aJg.png) ![small_ship](https://hackmd.io/_uploads/BknmCgZ6Jg.png =30%x)![super_ship](https://hackmd.io/_uploads/BJ3X0lZTkl.png =30%x)  ![mana_ship](https://hackmd.io/_uploads/S1YkI-Z6Je.png =30%x)
+![big_ship](https://hackmd.io/_uploads/BJdySzWa1x.png) ![common_ship](https://hackmd.io/_uploads/BJtJHMW6Jg.png) ![mana_ship](https://hackmd.io/_uploads/rkKyBf-pkl.png) ![small_enemy](https://hackmd.io/_uploads/r1t1SfWpke.png) ![small_ship](https://hackmd.io/_uploads/rkKJSfbTJg.png) ![super_ship](https://hackmd.io/_uploads/SktJrM-6kg.png)
+
 
 #### BULLETS
 ![bullet](https://hackmd.io/_uploads/BJlY1ZWTJg.png) ![egg](https://hackmd.io/_uploads/rkgt1Zbpyl.png)
 
 #### TOOLS
-![coin](https://hackmd.io/_uploads/Hyp2kWWpkg.png =50%x) 
-![health](https://hackmd.io/_uploads/HJp31WZTke.png =10%x) 
-![heart](https://hackmd.io/_uploads/S1ank-bTyl.png =50%x) 
-![star](https://hackmd.io/_uploads/S1pn1bWTyx.png =10%x)
+![coin](https://hackmd.io/_uploads/Hyp2kWWpkg.png) 
+![health](https://hackmd.io/_uploads/HJp31WZTke.png) 
+![heart](https://hackmd.io/_uploads/S1ank-bTyl.png) 
+![star](https://hackmd.io/_uploads/r1edrG-akl.png)
 
 #### PLANETS
 ![planet1_spritesheet](https://hackmd.io/_uploads/ByDVx-W6Je.png)
