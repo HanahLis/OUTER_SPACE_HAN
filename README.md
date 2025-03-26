@@ -16,11 +16,7 @@ Student ID: 24020115
 
 Class: K69I-IT7
 
-<<<<<<< HEAD
-Email: laladoraema@gmail.com 
-=======
 Email: laladoraema@gmail.com
->>>>>>> c4e30c1 (final)
 
 ## Gameplay
 ### Overview
