@@ -31,7 +31,17 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="include/Constants.h" />
+		<Unit filename="include/GameUtils.h" />
+		<Unit filename="include/SDLManager.h" />
+		<Unit filename="include/SoundManager.h" />
+		<Unit filename="include/Structs.h" />
+		<Unit filename="include/TextureManager.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/GameUtils.cpp" />
+		<Unit filename="src/SDLManager.cpp" />
+		<Unit filename="src/SoundManager.cpp" />
+		<Unit filename="src/TextureManager.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
