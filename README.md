@@ -2,13 +2,13 @@
 
 ---
 
-# * My first game: 
+# My first game: 
 This is my own first game project using C, C++ and  SDL2 libraries at University of Engineering and Technology, Vietnam National University.
 
 
 ---
 
-# * Table of contents
+# Table of contents
 ## Personal Information
 Name: Nguyễn Thị Ngọc Hà
 
