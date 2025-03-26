@@ -97,10 +97,10 @@ int main(int argc, char* argv[]) {
                 int mouseX = event.button.x;
                 int mouseY = event.button.y;
 
-                int settingButtonX = WINDOW_WIDTH - 60;
-                int settingButtonY = WINDOW_HEIGHT - 60;
-                int settingButtonWidth = 30;
-                int settingButtonHeight = 30;
+                int settingButtonX = WINDOW_WIDTH - 50;
+                int settingButtonY = WINDOW_HEIGHT - 50;
+                int settingButtonWidth = 50;
+                int settingButtonHeight = 50;
                 if (mouseX >= settingButtonX && mouseX <= settingButtonX + settingButtonWidth &&
                     mouseY >= settingButtonY && mouseY <= settingButtonY + settingButtonHeight) {
                     inSettings = !inSettings;
@@ -108,9 +108,9 @@ int main(int argc, char* argv[]) {
                 }
 
                 int storeButtonX = WINDOW_WIDTH - 100;
-                int storeButtonY = WINDOW_HEIGHT - 60;
-                int storeButtonWidth = 30;
-                int storeButtonHeight = 30;
+                int storeButtonY = WINDOW_HEIGHT - 50;
+                int storeButtonWidth = 50;
+                int storeButtonHeight = 50;
                 if (mouseX >= storeButtonX && mouseX <= storeButtonX + storeButtonWidth &&
                     mouseY >= storeButtonY && mouseY <= storeButtonY + storeButtonHeight) {
                     inStore = !inStore;
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 if (inSettings && !isDraggingStar) {
-                    if (mouseX >= 400 && mouseX <= 600 && mouseY >= 300 && mouseY <= 350) {
+                    if (mouseX >= 388 && mouseX <= 607 && mouseY >= 290 && mouseY <= 333) {
                         inMenu = true;
                         inLevelSelect = false;
                         gameRunning = false;
@@ -157,11 +157,11 @@ int main(int argc, char* argv[]) {
                         planetWave = 1;
                         soundManager.playSound(soundManager.getMouseClick());
                     }
-                    else if (mouseX >= 400 && mouseX <= 600 && mouseY >= 360 && mouseY <= 410) {
+                    else if (mouseX >= 388 && mouseX <= 607 && mouseY >= 350 && mouseY <= 400) {
                         inSettings = false;
                         soundManager.playSound(soundManager.getMouseClick());
                     }
-                    else if (mouseX >= 400 && mouseX <= 600 && mouseY >= 420 && mouseY <= 470) {
+                    else if (mouseX >= 388 && mouseX <= 607 && mouseY >= 416 && mouseY <= 460) {
                         running = false;
                         soundManager.playSound(soundManager.getMouseClick());
                     }
@@ -945,10 +945,10 @@ int main(int argc, char* argv[]) {
             SDL_RenderCopy(sdlManager.getRenderer(), textureManager.getStarTexture(), NULL, &starRect);
         }
 
-        SDL_Rect settingButtonRect = {WINDOW_WIDTH - 60, WINDOW_HEIGHT - 60, 50, 50};
+        SDL_Rect settingButtonRect = {WINDOW_WIDTH - 50, WINDOW_HEIGHT - 50, 50, 50};
         SDL_RenderCopy(sdlManager.getRenderer(), textureManager.getSettingStarTexture(), NULL, &settingButtonRect);
 
-        SDL_Rect storeButtonRect = {WINDOW_WIDTH - 120, WINDOW_HEIGHT - 60, 50, 50};
+        SDL_Rect storeButtonRect = {WINDOW_WIDTH - 100, WINDOW_HEIGHT - 50, 50, 50};
         SDL_RenderCopy(sdlManager.getRenderer(), textureManager.getStoreIconTexture(), NULL, &storeButtonRect);
 
         SDL_RenderPresent(sdlManager.getRenderer());
