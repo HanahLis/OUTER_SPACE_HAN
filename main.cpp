@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     TextureManager& textureManager = TextureManager::getInstance();
     SoundManager& soundManager = SoundManager::getInstance();
 
-    if (!sdlManager.init("Outer Space Shooter", WINDOW_WIDTH, WINDOW_HEIGHT)) {
+    if (!sdlManager.init("Outer Space", WINDOW_WIDTH, WINDOW_HEIGHT)) {
         return 1;
     }
 
