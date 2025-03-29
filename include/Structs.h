@@ -1,7 +1,7 @@
-#pragma once
+#ifndef STRUCTS_H
+#define STRUCTS_H
+
 #include <SDL.h>
-#include <vector>
-#include "Constants.h"
 
 struct SmallShip {
     int x, y;
@@ -9,18 +9,13 @@ struct SmallShip {
     SDL_Texture* texture;
     bool active;
     int eggCount;
-
-    SmallShip(int x_, int y_, int dx_, int dy_, SDL_Texture* texture_, bool active_, int eggCount_)
-        : x(x_), y(y_), dx(dx_), dy(dy_), texture(texture_), active(active_), eggCount(eggCount_) {}
 };
 
 struct Egg {
     int x, y;
     int dx, dy;
     bool active;
-
-    Egg(int x_, int y_, int dx_, int dy_, bool active_)
-        : x(x_), y(y_), dx(dx_), dy(dy_), active(active_) {}
+    Egg(int x_, int y_, int dx_, int dy_, bool active_) : x(x_), y(y_), dx(dx_), dy(dy_), active(active_) {}
 };
 
 struct SmallEnemy {
@@ -30,10 +25,6 @@ struct SmallEnemy {
     bool active;
     Uint32 lastShotTime;
     bool canShoot;
-
-    SmallEnemy(int x_, int y_, int dx_, int dy_, SDL_Texture* texture_, bool active_, Uint32 lastShotTime_, bool canShoot_)
-        : x(x_), y(y_), dx(dx_), dy(dy_), texture(texture_), active(active_), 
-          lastShotTime(lastShotTime_), canShoot(canShoot_) {}
 };
 
 struct Bullet {
@@ -41,7 +32,6 @@ struct Bullet {
     int dx, dy;
     SDL_Texture* texture;
     bool active;
-
     Bullet(int x_, int y_, int dx_, int dy_, SDL_Texture* texture_, bool active_)
         : x(x_), y(y_), dx(dx_), dy(dy_), texture(texture_), active(active_) {}
 };
@@ -57,13 +47,12 @@ struct Planet {
     float speed;
     int currentFrame;
     Uint32 lastFrameTime;
-    int totalFrames = 6;
-    Uint32 frameDelay = 166;
+    int totalFrames = PLANET_TOTAL_FRAMES;
+    Uint32 frameDelay = PLANET_FRAME_DELAY;
     int frameWidth;
-
     Planet(int x_, int y_, SDL_Texture* texture_)
         : x(x_), y(y_), health(10), texture(texture_), active(true),
-          lastShotTime(0), shootInterval(2000), dx(0), dy(0), speed(1.0f),
+          lastShotTime(0), shootInterval(DEFAULT_PLANET_SHOOT_INTERVAL), dx(0), dy(0), speed(1.0f),
           currentFrame(0), lastFrameTime(0), frameWidth(0) {
         int textureWidth;
         SDL_QueryTexture(texture, NULL, NULL, &textureWidth, NULL);
@@ -74,9 +63,7 @@ struct Planet {
 struct Health {
     int x, y;
     bool active;
-
-    Health(int x_, int y_, bool active_)
-        : x(x_), y(y_), active(active_) {}
+    Health(int x_, int y_, bool active_) : x(x_), y(y_), active(active_) {}
 };
 
 struct Coin {
@@ -84,7 +71,13 @@ struct Coin {
     bool active;
     int currentFrame;
     Uint32 lastFrameTime;
-
-    Coin(int x_, int y_)
-        : x(x_), y(y_), active(true), currentFrame(0), lastFrameTime(0) {}
+    Coin(int x_, int y_) : x(x_), y(y_), active(true), currentFrame(0), lastFrameTime(0) {}
 };
+
+struct SpreadShot {
+    int x, y;
+    bool active;
+    SpreadShot(int x_, int y_, bool active_) : x(x_), y(y_), active(active_) {}
+};
+
+#endif
