@@ -11,8 +11,11 @@ This is my own first game project using C, C++ and  SDL2 libraries at University
 # * Table of contents
 ## Personal Information
 Name: Nguyễn Thị Ngọc Hà
+
 Student ID: 24020115
+
 Class: K69I-IT7
+
 Email: laladoraema@gmail.com
 
 ## Gameplay
@@ -79,14 +82,20 @@ Lives will be displayed at the top-right corner of the screen. You will lose whe
 #### CREDITS
 **Special thanks to:**
 [Lazy Foo' Productions](https://lazyfoo.net/tutorials/SDL/01_hello_SDL/index.php) for their tutorials on SDL2.
+
 [SDL2](https://wiki.libsdl.org/SDL3/FrontPage) for their library.
+
 GitHub for powerful coding tools.
 
 **In this game, I used:**
 [Hack MD](https://hackmd.io/?nav=overview) for writing this document
+
 [Canva](https://www.canva.com) for creating images.
+
 Fonts for some text in my game.
+
 Music
+
 Sound effects
 
 
